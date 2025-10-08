@@ -1,0 +1,61 @@
+package com.example.demo;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+@Controller
+public class CodigoGenerador {
+
+    @GetMapping("/")
+    public String mostrarEntrada() {
+        return "formulario";  // Cambié "dato" por "formulario"
+    }
+
+    @PostMapping("/calcular")
+    public String recibirDatos(
+            @RequestParam(name = "nombre", required = false) String nombre,
+            @RequestParam(name = "apellido", required = false) String apellido,
+            @RequestParam(name = "fechaNacimiento", required = false) String fechaNacimiento,
+            Model modelo) {
+
+        String nom = (nombre == null || nombre.isEmpty()) ? "NN" : nombre;
+        String apell = (apellido == null) ? "" : apellido;
+        String fechaStr = (fechaNacimiento == null || fechaNacimiento.isEmpty()) ? "1900-01-01" : fechaNacimiento;
+
+        LocalDate fecha = LocalDate.parse(fechaStr, DateTimeFormatter.ISO_DATE);
+
+        String codigoSeguro = construirCodigo(nom, apell, fecha);
+
+        modelo.addAttribute("codigoSeguro", codigoSeguro);  // Cambié "clave" por "codigoSeguro"
+
+        return "resultadoVista";  // Cambié "contra" por "resultadoVista"
+    }
+
+    private String construirCodigo(String nombre, String apellido, LocalDate fecha) {
+        String parteNombre = nombre.length() > 1 ? nombre.substring(0, 2).toUpperCase() : nombre.toUpperCase();
+        String parteApellido = apellido.isEmpty() ? "X" : apellido.substring(0, 1).toUpperCase();
+
+        String anio = String.valueOf(fecha.getYear());
+        String mes = String.format("%02d", fecha.getMonthValue());
+        String dia = String.format("%02d", fecha.getDayOfMonth());
+
+        char[] codigo = new char[11];
+        codigo[0] = parteNombre.charAt(0);
+        codigo[1] = anio.charAt(0);
+        codigo[2] = parteApellido.charAt(0);
+        codigo[3] = anio.charAt(1);
+        codigo[4] = parteNombre.length() > 1 ? parteNombre.charAt(1) : 'X';
+        codigo[5] = anio.charAt(2);
+        codigo[6] = mes.charAt(0);
+        codigo[7] = anio.charAt(3);
+        codigo[8] = mes.charAt(1);
+        codigo[9] = dia.charAt(0);
+        codigo[10] = dia.charAt(1);
+
+        return new String(codigo);
+    }
+}
